@@ -1,0 +1,54 @@
+[build-system]
+# 使用 setuptools 作为构建后端，支持 PEP 621
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "TestForest"
+version = "0.1.0"
+description = "A minimal toolkit for evaluating tree data structures."
+readme = "README.md"
+requires-python = "==3.11.*"
+license = { file = "LICENSE" }
+
+authors = [
+  { name = "Jiarui Guo", email = "guojiarui@mail.nankai.edu.cn" }
+]
+
+keywords = [
+  "data-structures",
+  "trees",
+  "benchmark",
+  "C++",
+  "Python",
+]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: C++",
+  "Operating System :: OS Independent",
+]
+
+# 依赖列表
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.1",
+  "matplotlib>=3.8",
+  "rich>=13.7",
+  "psutil>=5.9",
+  # 如果你不打算在 Python 内部调用 CMake/Ninja，可以删掉下面两行
+  "cmake>=3.27",
+  "ninja>=1.11",
+]
+
+[project.optional-dependencies]
+
+[tool.setuptools]
+# 使用 src-layout：所有包都在 src/ 目录下
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+# 只在 src/ 下寻找 Python 包
+where = ["src"]
+include = ["tscripts*"]
