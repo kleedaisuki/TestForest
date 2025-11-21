@@ -73,7 +73,7 @@ def plot_time_vs_n(
         if not x or not y or len(x) != len(y):
             raise ValueError(f"Invalid data for curve '{name}': x and y must have same length.")
 
-        ax.plot(x, y, marker="o", label=name)
+        ax.plot(x, y, label=name)
 
     ax.set_title(title)
     ax.set_xlabel(xlabel)
