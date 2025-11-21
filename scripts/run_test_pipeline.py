@@ -6,11 +6,11 @@ run_test_pipeline.py
 2. 运行基准程序，生成 test-works/logs/*.csv
 3. 调用 tscripts.metrics + tscripts.visualize 读取最新日志并绘制 N vs Time 图
 
-运行完整流水线（configure + build + run + plot）：
+运行完整流水线（configure + build + run + scatter）：
 python ./scripts/run_test_pipeline.py
 
 只分析已有日志，不重新编译 / 运行 C++：
-python ./scripts/run_test_pipeline.py --only-plot
+python ./scripts/run_test_pipeline.py --only-scatter
 
 如果你想手动控制 CMake generator（比如强制用 MinGW Makefiles）：
 python ./scripts/run_test_pipeline.py --cmake-generator "MinGW Makefiles"
@@ -263,8 +263,8 @@ def analyze_and_plot(project_root: Path) -> None:
         if not curves:
             continue
         title = f"{op} time vs N"
-        logger.log_info(f"[pipeline] Plotting figure for op={op}")
-        save_path = visualize.plot_time_vs_n(
+        logger.log_info(f"[pipeline] Scattering figure for op={op}")
+        save_path = visualize.scatter_time_vs_n(
             data=curves,
             title=title,
             xlabel="N (elements)",
@@ -322,10 +322,10 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
         help="Skip running C++ benchmark executable",
     )
     parser.add_argument(
-        "--only-plot",
+        "--only-scatter",
         action="store_true",
         help=(
-            "Only analyze latest CSV log and plot figures; "
+            "Only analyze latest CSV log and scatter figures; "
             "skip CMake configure/build and C++ benchmark run"
         ),
     )
@@ -344,7 +344,7 @@ def main(argv: List[str] | None = None) -> int:
     logger.log_info(f"[pipeline] Build dir    : {build_dir}")
 
     try:
-        if not args.only_plot:
+        if not args.only_scatter:
             cmake_configure_and_build(
                 project_root=project_root,
                 build_dir=build_dir,
