@@ -95,7 +95,7 @@
 
 ```powershell
 ./scripts/install-dev.ps1
-
+```
 
 ## 🚀 启动完整测试流水线（Python）
 
