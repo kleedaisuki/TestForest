@@ -7,7 +7,7 @@
 #include <initializer_list>
 #include <iterator>
 
-namespace tf
+namespace test_forest
 {
 
     /**
@@ -662,17 +662,190 @@ namespace tf
         }
 
         /**
-         * @brief 带 hint 的插入（当前实现忽略 hint，仅作为接口兼容）
-         *        / Insert with hint (hint is ignored for now, kept for API compatibility).
+         * @brief 带 hint 的插入
+         *        / Insert with position hint.
          *
-         * @param hint  [in] 插入位置提示迭代器 / position hint (ignored)
+         * @param hint  [in] 插入位置提示迭代器（来自同一个容器）
+         *              / position hint iterator (must come from same container)
          * @param value [in] 值 / value to insert
-         * @return 指向插入或已存在元素的迭代器 / iterator to inserted or existing element.
+         * @return 指向插入或已存在元素的迭代器
+         *         / iterator to inserted or existing element.
+         *
+         * @note 该实现尝试在 hint 附近 O(1) 插入，否则退化为普通 O(log n) 插入。
+         *       This implementation tries O(1) insertion near hint; otherwise
+         *       falls back to normal O(log n) insertion.
          */
-        iterator insert(iterator /*hint*/, const value_type &value)
+        iterator insert(iterator hint, const value_type &value)
         {
-            auto res = insert(value);
-            return res.first;
+            // 空树：直接走普通插入逻辑 / empty tree: use normal insert
+            if (size_ == 0 || root_ == nil_)
+            {
+                return insert(value).first;
+            }
+
+            Node *h = hint.node_;
+
+            // 如果 hint 其实是 end() / if hint is end()
+            if (h == nil_)
+            {
+                Node *max = nil_->left; // 最大节点 / maximum node
+                if (max != nil_ && !comp_(value, max->value))
+                {
+                    // value >= max->value
+                    if (key_equal(value, max->value))
+                    {
+                        return iterator(max, nil_);
+                    }
+
+                    // 直接作为最大节点的右孩子插入
+                    // directly insert as right child of current max
+                    if (max->right == nil_)
+                    {
+                        Node *z = create_node(value);
+                        z->parent = max;
+                        max->right = z;
+                        insert_fixup(z);
+                        ++size_;
+                        update_nil_extremes();
+                        return iterator(z, nil_);
+                    }
+                }
+
+                // hint 不好用，退化为普通插入
+                // bad hint, fallback
+                return insert(value).first;
+            }
+
+            // hint 指向某个实际节点 h
+            // hint points to an actual node h
+            if (key_equal(value, h->value))
+            {
+                return iterator(h, nil_);
+            }
+
+            // 情况 1：value 应该在 h 前面 / case 1: value should go before h
+            if (comp_(value, h->value))
+            {
+                iterator it_before(hint);
+                if (it_before == begin())
+                {
+                    // 没有更小的元素，value 若 < h 则是新的最小值
+                    // no smaller element: if value < h, it's new minimum
+                    if (!comp_(h->value, value))
+                    {
+                        // 尝试直接挂在 h 左子树
+                        // try to use h->left
+                        if (h->left == nil_)
+                        {
+                            Node *z = create_node(value);
+                            z->parent = h;
+                            h->left = z;
+                            insert_fixup(z);
+                            ++size_;
+                            update_nil_extremes();
+                            return iterator(z, nil_);
+                        }
+                    }
+                }
+                else
+                {
+                    // 存在前驱 prev，使得 prev < h
+                    // there exists predecessor prev with prev < h
+                    --it_before;
+                    Node *prev = it_before.node_;
+
+                    // 希望 prev < value < h
+                    // we want prev < value < h
+                    if (!comp_(value, prev->value) && !comp_(h->value, value))
+                    {
+                        // 尝试挂在 prev->right 或 h->left 位置
+                        // try prev->right or h->left
+                        if (prev->right == nil_)
+                        {
+                            Node *z = create_node(value);
+                            z->parent = prev;
+                            prev->right = z;
+                            insert_fixup(z);
+                            ++size_;
+                            update_nil_extremes();
+                            return iterator(z, nil_);
+                        }
+                        else if (h->left == nil_)
+                        {
+                            Node *z = create_node(value);
+                            z->parent = h;
+                            h->left = z;
+                            insert_fixup(z);
+                            ++size_;
+                            update_nil_extremes();
+                            return iterator(z, nil_);
+                        }
+                    }
+                }
+
+                // 不满足局部插入条件，回退
+                return insert(value).first;
+            }
+
+            // 情况 2：value 应该在 h 后面 / case 2: value should go after h
+            {
+                iterator it_after(hint);
+                ++it_after;
+
+                if (it_after == end())
+                {
+                    // 没有比 h 更大的元素，value 若 > h 则是新的最大值
+                    // no greater element: if value > h, it's new maximum
+                    if (!comp_(value, h->value))
+                    {
+                        if (h->right == nil_)
+                        {
+                            Node *z = create_node(value);
+                            z->parent = h;
+                            h->right = z;
+                            insert_fixup(z);
+                            ++size_;
+                            update_nil_extremes();
+                            return iterator(z, nil_);
+                        }
+                    }
+                }
+                else
+                {
+                    Node *next = it_after.node_;
+                    // 希望 h < value < next
+                    // we want h < value < next
+                    if (!comp_(next->value, value) && !comp_(value, h->value))
+                    {
+                        // 尝试挂在 h->right 或 next->left
+                        // try h->right or next->left
+                        if (h->right == nil_)
+                        {
+                            Node *z = create_node(value);
+                            z->parent = h;
+                            h->right = z;
+                            insert_fixup(z);
+                            ++size_;
+                            update_nil_extremes();
+                            return iterator(z, nil_);
+                        }
+                        else if (next->left == nil_)
+                        {
+                            Node *z = create_node(value);
+                            z->parent = next;
+                            next->left = z;
+                            insert_fixup(z);
+                            ++size_;
+                            update_nil_extremes();
+                            return iterator(z, nil_);
+                        }
+                    }
+                }
+            }
+
+            // 所有快速路径都失败，说明 hint 不靠谱，走普通 O(log n) 插入
+            // All fast paths failed: bad hint, fallback to regular insertion
+            return insert(value).first;
         }
 
         /**
@@ -1292,6 +1465,20 @@ namespace tf
         }
 
         /**
+         * @brief 判断两个键是否等价
+         *        / Check whether two keys are equivalent.
+         *
+         * @param a [in] 第一个键 / first key
+         * @param b [in] 第二个键 / second key
+         * @return 若 a 与 b 等价（既不小于对方）则为 true
+         *         / true if a and b are equivalent (neither is less than the other).
+         */
+        bool key_equal(const key_type &a, const key_type &b) const
+        {
+            return !comp_(a, b) && !comp_(b, a);
+        }
+
+        /**
          * @brief 内部 lower_bound 查找
          *        / Internal lower_bound: first node not less than key.
          */
@@ -1363,6 +1550,6 @@ namespace tf
 
     }; // class RedBlackTree
 
-} // namespace tf
+} // namespace test_forest
 
 #endif

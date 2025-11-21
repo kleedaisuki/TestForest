@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <functional>
 
-namespace tf
+namespace test_forest
 {
 
     /**
@@ -1058,6 +1058,6 @@ namespace tf
         }
     };
 
-} // namespace tf
+} // namespace test_forest
 
 #endif

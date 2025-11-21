@@ -8,7 +8,7 @@
 #include <iterator>
 #include <memory>
 
-namespace tf
+namespace test_forest
 {
 
     /**
@@ -1374,6 +1374,6 @@ namespace tf
         }
     };
 
-} // namespace tf
+} // namespace test_forest
 
 #endif

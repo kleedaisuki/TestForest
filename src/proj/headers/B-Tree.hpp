@@ -10,7 +10,7 @@
 /**
  * @brief B树容器所在的命名空间。Namespace that contains B-tree containers.
  */
-namespace tf
+namespace test_forest
 {
 
     /**
@@ -749,6 +749,6 @@ namespace tf
         }
     };
 
-} // namespace tf
+} // namespace test_forest
 
 #endif
