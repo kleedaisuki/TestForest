@@ -317,7 +317,10 @@ namespace test_forest
     void run_all_benchmarks(utils::CsvLogger &logger)
     {
         // 这里可以根据需要调整 N 的规模 / Adjust N values as needed.
-        const std::vector<std::size_t> sizes{1'000, 5'000, 10'000, 50'000};
+        std::vector<std::size_t> sizes;
+        sizes.reserve(100000 / 10 + 5);
+        for (std::size_t i = 10; i < 100000; i += 10)
+            sizes.push_back(i);
 
         std::vector<std::function<void()>> tasks;
         tasks.reserve(4);

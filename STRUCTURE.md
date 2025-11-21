@@ -15,8 +15,6 @@
 │
 ├─ test-works/
 │   │
-│   ├─ cases/ # 以 txt 存放生成的测试用例   
-│   │
 │   └─ logs/  # 存放测试结果
 │
 └─ src/
@@ -24,8 +22,7 @@
     │   ├─ __init__.py
     │   ├─ logger.py # 日志
     │   ├─ metrics.py # 读取测试结果、做计算
-    │   ├─ visualize.py # 调用图形库
-    │   └─ generation.py # 生成测试用例，种子可选
+    │   └─ visualize.py # 调用图形库
     │
     └─ proj/
         │
